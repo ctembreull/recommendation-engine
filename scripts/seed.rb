@@ -65,5 +65,5 @@ skills = ['Management', 'Business', 'Sales ', 'Marketing', 'Communication',
     }
   }
 
-  es.index index: INDEX, type: 'user', body: user
+  es.index index: INDEX, type: 'user', id: user[:email], body: user
 end
