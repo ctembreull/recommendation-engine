@@ -19,6 +19,10 @@ If you don't have ruby2.2.1 (the latest stable version as of this writing), inst
     $ rvm install 2.2.1
 
 #### 2. Install Elasticsearch
+
+    christembreull@host ~
+    $ brew install elasticsearch
+
 This is always easiest via Homebrew, and this document will assume that Elasticsearch was installed this way. Make sure your server is started with
 the following command - you'll see a similar status JSON document if the server is running:
 
