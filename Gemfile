@@ -33,7 +33,7 @@ group :test do
   gem 'rack-test',        '~> 0.6.2'
   # gem 'database_cleaner', '~> 1.2.0'
   # gem 'factory_girl',     '~> 4.4.0'
-  gem 'faker',            '~> 1.3.0'
+  gem 'faker',            '~> 1.4'
 end
 
 group :production do
