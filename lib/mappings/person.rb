@@ -20,7 +20,7 @@ module Comotion
                 thumbnailId:       { type: 'string', store: false },
                 thumbnailUrl:      { type: 'string', store: false },
                 location:          { type: 'string', store: true },
-                tags:              { type: 'string', store: true }, # this could be Interests, in a pinch
+                tags:              { type: 'string', store: true, index: 'analyzed' }, # this could be Interests, in a pinch
                 initialLogin:      { type: 'date', store: true, format: 'yyyy-MM-dd HH:mm:ss Z' },
                 published:         { type: 'date', store: true, format: 'yyyy-MM-dd HH:mm:ss Z' },
                 updated:           { type: 'date', store: true, format: 'yyyy-MM-dd HH:mm:ss Z' },
@@ -36,7 +36,7 @@ module Comotion
                 ## Below this comment, fields are our own invention. They have to be, since
                 #  Jive doesn't really allow for the specific things we're trying to do.
                 role:      { type: 'string', store: true },
-                interests: { type: 'string', store: true }
+                interests: { type: 'string', store: true, index: 'analyzed' }
               }
             }
           }

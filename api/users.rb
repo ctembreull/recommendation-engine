@@ -2,6 +2,15 @@ module Comotion
   module Users
     class API < Grape::API
 
+      rescue_from Elasticsearch::Transport::Transport::Errors::NotFound do |e|
+        message = {
+          status: 404,
+          resource: e.message,
+          error: 'Not Found'
+        }
+        Rack::Response.new([ message ], 404, { 'Content-Type' => 'application/json' }).finish
+      end
+
       namespace :users do
 
         # POST /users
@@ -46,6 +55,18 @@ module Comotion
           # Step 2: DELETE /users/:user_id?delete_token=:delete_token
           desc 'Delete an existing user object'
           delete do
+            elastic = Comotion::Data::Elasticsearch.new(false).client
+            index   = 'comotion'
+            type    = 'person'
+            # expected response:
+            # {
+            #   "found": true,
+            #   "_index": "comotion",
+            #   "_type": "person",
+            #   "_id": "79b16ba8-c624-4605-961c-07c5f4a99466",
+            #   "_version": 2
+            # }
+            response = elastic.delete index: index, type: type, id: params[:user_id]
           end
 
           namespace :wishlist do
@@ -88,7 +109,27 @@ module Comotion
 
             # GET /users/:user_id/connections/recommended
             desc 'request a list of recommended connections'
+            params do
+              optional :role,  type: String
+              optional :debug, type: Boolean
+            end
             get :recommended do
+              elastic = Comotion::Data::Elasticsearch.new(false).client
+              index   = 'comotion'
+              type    = 'person'
+
+              this_user = elastic.get index: index, type: type, id: params[:user_id]
+              esq       = Esquire::UserRecommendation.new
+              esq.roles = params[:role].split(',') unless params[:role].nil?
+              esq.interests = this_user['_source']['interests'].map { |t| t.downcase }
+
+              results = MyApp::User::Formatter.from_elasticsearch(esq.run)
+
+              #if params[:debug]
+              #  return { query: esq.build, results: results }
+              #else
+              #  return results
+              #end
             end
 
             route_param :other_user_id do

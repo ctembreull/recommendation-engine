@@ -1,3 +1,21 @@
+module Comotion
+  module Data
+    class Elasticsearch
+      @@es_connection = nil
+
+      def initialize(log = false)
+        @@es_connection ||= ::Elasticsearch::Client.new log: log
+      end
+
+      def client
+        @@es_connection
+      end
+    end
+  end
+end
+
+
+
 module Esquire
 
   module Config
@@ -8,14 +26,6 @@ module Esquire
       @@client ||= Elasticsearch::Client.new log: false
     end
 
-  end
-
-  class Harness
-    include Esquire::Config
-
-    def get(type, id)
-      client.get index: @@index, type: type, id: id
-    end
   end
 
   class UserRecommendation

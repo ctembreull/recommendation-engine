@@ -3,6 +3,7 @@ module Comotion
 
     class User
 
+
     end # class User
 
 
@@ -27,7 +28,9 @@ module MyApp
           data << {
             id:    doc['_id'],
             score: doc['_score'],
-            name:  doc['_source']['name']
+            name:  doc['_source']['displayName'],
+            email: doc['_source']['emails'][0]['value'],
+            avatar: doc['_source']['thumbnailUrl']
           }
         end
 
