@@ -25,7 +25,7 @@ end
 
 # TODO: replace MyApp with your module setup
 task :routes => :environment do
-  MyApp::API.routes.each do |api|
+  Comotion::API.routes.each do |api|
     method = api.route_method.ljust(10)
     path = api.route_path
     puts "     #{method} #{path}"

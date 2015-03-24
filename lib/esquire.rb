@@ -1,7 +1,7 @@
 module Esquire
 
   module Config
-    @@index  = 'demo'
+    @@index  = 'comotion'
     @@client = nil
 
     def client
@@ -10,10 +10,18 @@ module Esquire
 
   end
 
+  class Harness
+    include Esquire::Config
+
+    def get(type, id)
+      client.get index: @@index, type: type, id: id
+    end
+  end
+
   class UserRecommendation
     include Esquire::Config
 
-    @type = 'user'
+    @type = 'person'
 
     attr_accessor :roles, :interests, :exclude
 

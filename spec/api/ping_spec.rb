@@ -1,12 +1,12 @@
 require 'spec_helper'
 
-describe MyApp::API do
+describe Comotion::API do
 
   def app
-    MyApp::API
+    Comotion::API
   end
 
-  describe MyApp::Ping do
+  describe Comotion::Ping do
     it 'goes ping' do
       get '/ping'
       expect(last_response.status).to eq(200)

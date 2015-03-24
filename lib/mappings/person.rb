@@ -50,7 +50,7 @@ module Comotion
         {
           type:              'person',
           id:                SecureRandom.uuid,
-          display_name:      Faker::Name.name,
+          displayName:       Faker::Name.name,
           directReportCount: 0,
           followerCount:     SecureRandom.random_number(999),
           followingCount:    SecureRandom.random_number(999),
@@ -59,7 +59,7 @@ module Comotion
           thumbnailUrl:      Faker::Avatar.image,
           location:          "#{Faker::Address.latitude}, #{Faker::Address.longitude}",
           tags:              interests,
-          initial_login:     Faker::Time.backward(28),
+          initialLogin:      Faker::Time.backward(28),
           published:         Faker::Time.backward(28),
           updated:           Faker::Time.backward(7),
           emails: [

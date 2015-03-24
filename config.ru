@@ -13,4 +13,4 @@ use Rack::Cors do
 end
 
 # TODO: Replace MyApp with your module structure
-run MyApp::App.instance
+run Comotion::App.instance

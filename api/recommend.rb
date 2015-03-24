@@ -1,4 +1,4 @@
-module MyApp
+module Comotion
   # Recommends things, duh.
   class Recommendations < Grape::API
 

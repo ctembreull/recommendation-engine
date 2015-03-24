@@ -1,4 +1,4 @@
-module MyApp
+module Comotion
   # Default mounting point for API methods
   class API < Grape::API
     format :json
@@ -7,9 +7,11 @@ module MyApp
     after do; end
     helpers do; end
 
-    mount ::MyApp::Ping
-    mount ::MyApp::Engine
-    mount ::MyApp::Recommendations
+    mount ::Comotion::Ping
+    mount ::Comotion::Users::API
+    mount ::Comotion::Groups::API
+    mount ::Comotion::Events::API
+    #mount ::Comotion::Recommendations
 
   end
 end
