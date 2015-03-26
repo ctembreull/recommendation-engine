@@ -66,11 +66,7 @@ module Comotion
           index    = 'comotion'
           type     = 'person'
 
-          query = {
-            query: {
-              match_all: {}|
-            }
-          }
+          query = { query: { match_all: {} } }
 
           response = elastic.search index: index, type: type, query: query
         end
