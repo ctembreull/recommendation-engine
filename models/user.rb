@@ -1,19 +1,3 @@
-module Comotion
-  module Users
-
-    class User
-
-
-    end # class User
-
-
-    class Entity
-
-    end # class Entity
-
-  end # module Users
-end # module Comotion
-
 
 
 module MyApp

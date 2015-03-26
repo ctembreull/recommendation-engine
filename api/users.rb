@@ -11,11 +11,50 @@ module Comotion
         Rack::Response.new([ message ], 404, { 'Content-Type' => 'application/json' }).finish
       end
 
+      helpers do
+        params :person do
+          requires :person, type: Hash do
+            requires :id,                type: String, allow_blank: false
+            requires :type,              type: String, allow_blank: false
+            optional :displayName,       type: String
+            optional :role,              type: String
+            optional :directReportCount, type: Integer
+            optional :followerCount,     type: Integer
+            optional :followingCount,    type: Integer
+            optional :status,            type: Integer
+            optional :thumbnailId,       type: String
+            optional :thumbnailUrl,      type: String
+            optional :location,          type: String
+            optional :tags,              type: Array
+            optional :initialLogin,      type: DateTime
+            optional :published,         type: DateTime
+            optional :updated,           type: DateTime
+            optional :emails,            type: Array
+          end
+        end
+      end
+
       namespace :users do
 
         # POST /users
         desc 'Create or replace a user'
+        params do
+          use :person
+        end
         post do
+          person = {}
+          model  = Comotion::Data::Person::Model.new
+          # TODO: Use Comotion::Data::Model as a validator source and validate
+          #       and check the data in the params before adding to the person hash
+          model.members.each do |field|
+            person[field] = params[:person][field]
+          end
+
+          elastic  = Comotion::Data::Elasticsearch.new(false).client
+          index    = 'comotion'
+          type     = 'person'
+
+          response = elastic.index index: index, type: type, id: person[:id], body: person
         end
 
         # GET /users
@@ -45,7 +84,15 @@ module Comotion
 
           # PUT /users/:user_id/status
           desc 'Convenience endpoint for status update'
+          params do
+            requires :status, type: String, allow_blank: true
+          end
           put :status do
+            elastic = Comotion::Data::Elasticsearch.new(false).client
+            index   = 'comotion'
+            type    = 'person'
+
+            response = elastic.update index: index, type: type, id: params[:user_id], body: {doc: { status: params[:status] }}
           end
 
           # DELETE /users/:user_id
@@ -123,13 +170,13 @@ module Comotion
               esq.roles = params[:role].split(',') unless params[:role].nil?
               esq.interests = this_user['_source']['interests'].map { |t| t.downcase }
 
-              results = MyApp::User::Formatter.from_elasticsearch(esq.run)
+              results = Comotion::Data::Person::Formatter.from_elasticsearch(esq.run)
 
-              #if params[:debug]
-              #  return { query: esq.build, results: results }
-              #else
-              #  return results
-              #end
+              if params[:debug]
+                return { query: esq.build, results: results }
+              else
+                return results
+              end
             end
 
             route_param :other_user_id do
