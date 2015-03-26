@@ -62,8 +62,17 @@ module Comotion
         # User lists in our case are heavily context-dependent.
         desc 'Get all users - probably inadvisable'
         get do
-          # TODO: Find an implementation for this or remove it
-          # no-op
+          elastic  = Comotion::Data::Elasticsearch.new(false).client
+          index    = 'comotion'
+          type     = 'person'
+
+          query = {
+            query: {
+              match_all: {}|
+            }
+          }
+
+          response = elastic.search index: index, type: type, query: query
         end
 
         route_param :user_id do
