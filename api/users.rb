@@ -68,7 +68,7 @@ module Comotion
 
           query = { query: { match_all: {} } }
 
-          response = elastic.search index: index, type: type, query: query
+          response = elastic.search index: index, type: type, body: query
         end
 
         route_param :user_id do
