@@ -3,12 +3,12 @@ source 'http://rubygems.org'
 ruby '2.2.1'
 
 # Core bits needed to run the thing
-gem 'rack',          '~> 1.4.1'
-gem 'rack-cors',     '~> 0.2.8'
-gem 'grape',         '~> 0.7.0'
-gem 'grape-entity',  '~> 0.4.2'
-gem 'grape-swagger', '~> 0.6.0'
-gem 'json',          '~> 1.8.0'
+gem 'rack',          '~> 1.6'
+gem 'rack-cors',     '~> 0.3'
+gem 'grape',         '~> 0.11'
+gem 'grape-entity',  '~> 0.4'
+gem 'grape-swagger', '~> 0.10'
+gem 'json',          '~> 1.8'
 gem 'bcrypt'
 gem 'hash-path'
 
