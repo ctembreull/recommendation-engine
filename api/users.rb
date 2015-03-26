@@ -175,13 +175,9 @@ module Comotion
               esq.roles = params[:role].split(',') unless params[:role].nil?
               esq.interests = this_user['_source']['tags'].map { |t| t.downcase }
 
-              results = Comotion::Data::Person::Formatter.from_elasticsearch(esq.run)
+              esq.run
+              #results = Comotion::Data::Person::Formatter.from_elasticsearch(esq.run)
 
-              if params[:debug]
-                return { query: esq.build, results: results }
-              else
-                return results
-              end
             end
 
             route_param :other_user_id do
