@@ -173,7 +173,7 @@ module Comotion
               this_user = elastic.get index: index, type: type, id: params[:user_id]
               esq       = Esquire::UserRecommendation.new
               esq.roles = params[:role].split(',') unless params[:role].nil?
-              esq.interests = this_user['_source']['interests'].map { |t| t.downcase }
+              esq.interests = this_user['_source']['tags'].map { |t| t.downcase }
 
               results = Comotion::Data::Person::Formatter.from_elasticsearch(esq.run)
 
