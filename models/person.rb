@@ -37,7 +37,7 @@ module Comotion
                   thumbnailId:       { type: 'string', store: false },
                   thumbnailUrl:      { type: 'string', store: false },
                   location:          { type: 'string', store: true },
-                  tags:              { type: 'string', store: true, index: 'analyzed' }, # this could be Interests, in a pinch
+                  tags:              { type: 'string', store: true },
                   initialLogin:      { type: 'date', store: true, format: 'yyyy-MM-dd HH:mm:ss Z' },
                   published:         { type: 'date', store: true, format: 'yyyy-MM-dd HH:mm:ss Z' },
                   updated:           { type: 'date', store: true, format: 'yyyy-MM-dd HH:mm:ss Z' },

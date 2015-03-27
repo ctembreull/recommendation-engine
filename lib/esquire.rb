@@ -76,7 +76,7 @@ module Esquire
       {
         function_score: {
           query: {
-            terms: { interests: @interests }
+            terms: { tags: @interests }
           },
           script_score: {
             file: @script,
