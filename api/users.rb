@@ -14,22 +14,11 @@ module Comotion
       helpers do
         params :person do
           requires :person, type: Hash do
-            requires :id,                type: String, allow_blank: false
-            requires :type,              type: String, allow_blank: false
-            optional :displayName,       type: String
-            optional :role,              type: String
-            optional :directReportCount, type: Integer
-            optional :followerCount,     type: Integer
-            optional :followingCount,    type: Integer
-            optional :status,            type: Integer
-            optional :thumbnailId,       type: String
-            optional :thumbnailUrl,      type: String
-            optional :location,          type: String
-            optional :tags,              type: Array
-            optional :initialLogin,      type: DateTime
-            optional :published,         type: DateTime
-            optional :updated,           type: DateTime
-            optional :emails,            type: Array
+            requires :id,       type: String, allow_blank: false
+            optional :email,    type: String
+            optional :username, type: String
+            optional :fullname, type: String
+            optional :tags,     type: Array
           end
         end
       end

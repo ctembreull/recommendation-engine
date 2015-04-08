@@ -2,23 +2,7 @@ module Comotion
   module Data
     module Person
 
-      class Model < Struct.new(:id,
-                               :type,
-                               :displayName,
-                               :directReportCount,
-                               :followerCount,
-                               :followingCount,
-                               :status,
-                               :thumbnailId,
-                               :thumbnailUrl,
-                               :location,
-                               :tags,
-                               :initialLogin,
-                               :published,
-                               :updated,
-                               :emails,
-                               :role
-                              )
+      class Model < Struct.new(:id, :username, :fullname, :email, :tags)
       end # class Model
 
       class Mapping
@@ -27,29 +11,13 @@ module Comotion
             mappings: {
               person: {
                 properties: {
-                  type:              { type: 'string', store: true },
-                  id:                { type: 'string', store: true },
-                  displayName:       { type: 'string', store: true },
-                  directReportCount: { type: 'integer', store: false },
-                  followerCount:     { type: 'integer', store: true },
-                  followingCount:    { type: 'integer', store: true },
-                  status:            { type: 'string', store: true },
-                  thumbnailId:       { type: 'string', store: false },
-                  thumbnailUrl:      { type: 'string', store: false },
-                  location:          { type: 'string', store: true },
-                  tags:              { type: 'string', store: true },
-                  initialLogin:      { type: 'date', store: true, format: 'yyyy-MM-dd HH:mm:ss Z' },
-                  published:         { type: 'date', store: true, format: 'yyyy-MM-dd HH:mm:ss Z' },
-                  updated:           { type: 'date', store: true, format: 'yyyy-MM-dd HH:mm:ss Z' },
-                  emails: {
-                    properties: {
-                      value:      { type: 'string', store: true },
-                      type:       { type: 'string', store: false },
-                      jive_label: { type: 'string', store: false },
-                      primary:    { type: 'boolean', store: true }
-                    }
-                  },
-                  role:      { type: 'string', store: true },
+                  id:       { type: 'string', store: true },
+                  fullname: { type: 'string', store: true },
+                  username: { type: 'string', store: true },
+                  email:    { type: 'string', store: true },
+                  tags:     { type: 'string', store: true, analyzed: true },
+                  type:     { type: 'string', store: true },
+                  role:     { type: 'string', store: true }
                 }
               }
             }
@@ -90,29 +58,13 @@ module Comotion
           interests_count = SecureRandom.random_number(12)
           interests_count = 1 if interests_count == 0
           {
-            type:              'person',
-            id:                SecureRandom.uuid,
-            displayName:       Faker::Name.name,
-            directReportCount: 0,
-            followerCount:     SecureRandom.random_number(999),
-            followingCount:    SecureRandom.random_number(999),
-            status:            Faker::Lorem.sentence(8,true),
-            thumbnailId:       SecureRandom.uuid,
-            thumbnailUrl:      Faker::Avatar.image,
-            location:          "#{Faker::Address.latitude}, #{Faker::Address.longitude}",
-            tags:              @@skills.sample(interests_count),
-            initialLogin:      Faker::Time.backward(28),
-            published:         Faker::Time.backward(28),
-            updated:           Faker::Time.backward(7),
-            emails: [
-              {
-                value:      Faker::Internet.email,
-                type:       'comotion',
-                jive_label: 'Email',
-                primary:    true
-              }
-            ],
-            role:              @@roles.sample,
+            type:           'person',
+            id:             SecureRandom.uuid,
+            fullname:       Faker::Name.name,
+            username:       Faker::Internet.user_name,
+            email:          Faker::Internet.email,
+            tags:           @@skills.sample(interests_count),
+            role:           [@@roles.sample]
           }
         end # def seed
       end # class Stub
@@ -127,9 +79,9 @@ module Comotion
             data << {
               id:     doc['_id'],
               score:  doc['_score'],
-              name:   doc['_source']['displayName'],
-              email:  doc['_source']['emails'][0]['value'],
-              avatar: doc['_source']['thumbnailUrl']
+              name:   doc['_source']['fullname'],
+              email:  doc['_source']['email'],
+              role:   doc['_source']['role']
             }
           end
 
