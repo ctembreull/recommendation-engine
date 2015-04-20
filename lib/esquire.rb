@@ -14,86 +14,116 @@ module Comotion
   end
 end
 
-
-
 module Esquire
+  class Core
+    attr_accessor :script_file, :terms, :src_weight, :tgt_weight, :max_boost, :boost_mode
+    attr_accessor :index, :type
 
-  module Config
-    @@index  = 'comotion'
-    @@client = nil
+
+    def initialize
+      @query = { match_all: {} }
+
+      @index       = 'comotion'
+      @type        = 'person'
+
+      @script_type = :cvg_score
+      @terms       = []
+      @src_weight  = 1
+      @tgt_weight  = 0
+      @max_boost   = 0.99
+      @boost_mode  = 'replace'
+    end
 
     def client
       @@client ||= Elasticsearch::Client.new log: false
     end
 
-  end
-
-  class UserRecommendation
-    include Esquire::Config
-
-    @type = 'person'
-
-    attr_accessor :roles, :interests, :exclude
-
-    def initialize(results = 10)
-      @script     = 'cvg_score'
-      @max_boost  = 0.99
-      @src_weight = 1
-      @tgt_weight = 0
-      @roles      = []
-      @interests  = []
-      @exclude    = []
-      @max_results = results
-    end
-
-    def debug
-      @@index
-    end
-
-    def build
+    def cvg_score
       {
-        size: @max_results,
-        query: {
-          filtered: {
-            filter: filter_atom,
-            query:  query_atom
-          }
+        function_score: {
+          query:        @query,
+          script_score: {
+            file:   @script_type.to_s,
+            params: {
+              terms:      @terms,
+              src_weight: @src_weight,
+              tgt_weight: @tgt_weight
+            }
+          },
+          max_boost:  @max_boost,
+          boost_mode: @boost_mode
         }
       }
     end
 
     def run
-      client.search index: @@index, type: @type, body: build
+      client.search index: @index, type: @type, body: build
+    end
+  end
+
+  class UserMatch < Core
+    def initialize(user_id, terms=[])
+      super()
+      @query = { match: { id: user_id } }
+      @terms = terms
     end
 
-    def filter_atom
-      return {} if @roles.empty?
-      { terms: { role: @roles } }
+    def build
+      { query: cvg_score }
+    end
+  end
+
+  class NetworkMatch < Core
+    attr_accessor :network, :type
+
+    def initialize(network = [], terms = [], type = 'person')
+      super()
+      @type    = type
+      @network = network
+      @terms   = terms
     end
 
-    def query_atom
-      return {} if @interests.empty?
+    def filter
       {
-        function_score: {
-          query: {
-            terms: { tags: @interests }
-          },
-          script_score: {
-            file: @script,
-            params: {
-              terms:      @interests,
-              src_weight: @src_weight,
-              tgt_weight: @tgt_weight
-            }
-          },
-          max_boost: @max_boost,
-          boost_mode: 'replace'
+        ids: {
+          type:   @type,
+          values: @network
+        }
+      }
+    end
+
+    def build
+      {
+        query: {
+          filtered: {
+            filter: filter,
+            query:  cvg_score
+          }
         }
       }
     end
   end
 
+  class RecommendedUsers < Core
+    def initialize(terms = [])
+      super()
+      @terms = terms
+      @query = {
+        terms:  {
+          tags: @terms.map { |t| t.downcase }
+        }
+      }
+    end
 
-
-
+    def build
+      @terms = @terms.map { |t| t.downcase }
+      {
+        query: {
+          filtered: {
+            query: cvg_score
+          }
+        }
+      }
+    end
+  end
 end

@@ -180,6 +180,16 @@ module Comotion
                 requires :other_user_id, type: String
               end
 
+              desc 'get other user with compatibility'
+              get do
+                elastic = Comotion::Data::Elasticsearch.new(false).client
+                index   = 'comotion'
+                type    = 'person'
+
+                this_user = elastic.get index: index, type: type, id: params[:user_id]
+
+              end
+
               # POST /users/:user_id/connections/:other_user_id
               desc 'follow a user'
               post do
