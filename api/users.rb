@@ -19,6 +19,7 @@ module Comotion
             optional :username, type: String
             optional :fullname, type: String
             optional :tags,     type: Array
+            optional :role,     type: String
           end
         end
       end
@@ -42,6 +43,8 @@ module Comotion
           elastic  = Comotion::Data::Elasticsearch.new(false).client
           index    = 'comotion'
           type     = 'person'
+
+          puts params[:person]
 
           response = elastic.index index: index, type: type, id: person[:id], body: person
         end
