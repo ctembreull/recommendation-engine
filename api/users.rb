@@ -41,10 +41,12 @@ module Comotion
             person[field] = params[:person][field]
           end
 
+          pp person
+
           elastic  = Comotion::Data::Elasticsearch.new(false).client
           index    = 'comotion'
           type     = 'person'
-          
+
           response = elastic.index index: index, type: type, id: person[:id], body: person
         end
 

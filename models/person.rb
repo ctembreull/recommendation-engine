@@ -2,7 +2,7 @@ module Comotion
   module Data
     module Person
 
-      class Model < Struct.new(:id, :username, :fullname, :email, :tags, :role, :type)
+      class Model < Struct.new(:id, :username, :fullname, :email, :tags, :role, :type, :avatar)
       end # class Model
 
       class Mapping
