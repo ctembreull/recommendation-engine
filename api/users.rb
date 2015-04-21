@@ -19,6 +19,7 @@ module Comotion
             optional :username, type: String
             optional :fullname, type: String
             optional :tags,     type: Array
+            optional :avatar,   type: String
             optional :role,     type: String
           end
         end
@@ -43,9 +44,7 @@ module Comotion
           elastic  = Comotion::Data::Elasticsearch.new(false).client
           index    = 'comotion'
           type     = 'person'
-
-          puts params[:person]
-
+          
           response = elastic.index index: index, type: type, id: person[:id], body: person
         end
 
@@ -72,6 +71,11 @@ module Comotion
           # GET /users/:user_id
           desc 'Retrive a user object by id'
           get do
+            elastic = Comotion::Data::Elasticsearch.new(false).client
+            index   = 'comotion'
+            type    = 'person'
+
+            elastic.get index: index, type: type, id: params[:user_id]
           end
 
           # PUT /users/:user_id
@@ -163,9 +167,8 @@ module Comotion
               type    = 'person'
 
               this_user = elastic.get index: index, type: type, id: params[:user_id]
-              esq       = Esquire::UserRecommendation.new
-              esq.roles = params[:role].split(',') unless params[:role].nil?
-              esq.interests = this_user['_source']['tags'].map { |t| t.downcase }
+              interests = this_user['_source']['tags'].map { |t| t.downcase }
+              esq       = Esquire::RecommendedUsers.new(interests)
 
               results = Comotion::Data::Person::Formatter.from_elasticsearch(esq.run)
 
@@ -183,14 +186,20 @@ module Comotion
                 requires :other_user_id, type: String
               end
 
-              desc 'get other user with compatibility'
+              desc 'Get your match-level with this user'
               get do
                 elastic = Comotion::Data::Elasticsearch.new(false).client
                 index   = 'comotion'
                 type    = 'person'
 
                 this_user = elastic.get index: index, type: type, id: params[:user_id]
+                interests = this_user['_source']['tags'].map{ |t| t.downcase }
+                esq       = Esquire::UserMatch.new(params[:other_user_id], interests)
 
+                result = esq.run
+                match  = result['hits']['hits'][0]
+
+                {score: match['_score']}
               end
 
               # POST /users/:user_id/connections/:other_user_id

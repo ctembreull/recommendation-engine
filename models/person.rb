@@ -17,6 +17,7 @@ module Comotion
                   email:    { type: 'string', store: true },
                   tags:     { type: 'string', store: true, analyzed: true },
                   type:     { type: 'string', store: true },
+                  avatar:   { type: 'string', store: true },
                   role:     { type: 'string', store: true }
                 }
               }
@@ -81,6 +82,7 @@ module Comotion
               score:  doc['_score'],
               name:   doc['_source']['fullname'],
               email:  doc['_source']['email'],
+              avatar: doc['_source']['avatar'],
               role:   doc['_source']['role']
             }
           end
