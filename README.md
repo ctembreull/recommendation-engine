@@ -111,6 +111,8 @@ If you start the server this way, you'll have to restart it after every change, 
 Issue an API call to see what you get back.
 
     christembreull@host (master) ~/dev/comotion/recommendation-engine
-    $ curl -XGET http://localhost:9292/recommendations/test
+    $ curl -XGET http://localhost:9292/ping
+
+If you see `{"ping":"pong"}` you are in business.
 
 ## Congratulations! You're running the Comotion Recommendation Engine!
