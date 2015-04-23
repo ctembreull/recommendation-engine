@@ -23,10 +23,25 @@ If you don't have ruby2.2.1 (the latest stable version as of this writing), inst
     christembreull@host ~
     $ brew install elasticsearch
 
-This is always easiest via Homebrew, and this document will assume that Elasticsearch was installed this way. Make sure your server is started with
-the following command - you'll see a similar status JSON document if the server is running:
+This is always easiest via Homebrew, and this document will assume that Elasticsearch was installed this way. 
 
-    christembreull@host ~
+On OS-X, you will need to start the services for elasticsearch, you can do so as follows:
+
+To have launchd start elasticsearch at login:
+    
+    ln -sfv /usr/local/opt/elasticsearch/*.plist ~/Library/LaunchAgents
+
+Then to load elasticsearch now:
+
+    launchctl load ~/Library/LaunchAgents/homebrew.mxcl.elasticsearch.plist
+
+Or, if you don't want/need launchctl, you can just run:
+
+    elasticsearch --config=/usr/local/opt/elasticsearch/config/elasticsearch.yml
+    
+Make sure your server is started with the following command `user$ curl -XGET http://127.0.0.1:9200` you'll see a similar status JSON document if the server is running:
+
+    user@host ~
     $ curl -XGET http://127.0.0.1:9200
     {
       "status" : 200,
@@ -96,6 +111,8 @@ If you start the server this way, you'll have to restart it after every change, 
 Issue an API call to see what you get back.
 
     christembreull@host (master) ~/dev/comotion/recommendation-engine
-    $ curl -XGET http://localhost:9292/recommendations/test
+    $ curl -XGET http://localhost:9292/ping
+
+If you see `{"ping":"pong"}` you are in business.
 
 ## Congratulations! You're running the Comotion Recommendation Engine!
