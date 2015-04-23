@@ -1,6 +1,7 @@
 module Comotion
   module Users
     class API < Grape::API
+      @@type = 'person'
 
       rescue_from Elasticsearch::Transport::Transport::Errors::NotFound do |e|
         message = {
@@ -23,6 +24,39 @@ module Comotion
             optional :role,     type: String
           end
         end
+
+        params :network do
+          optional :exclude_following, type: Boolean, default: false
+          optional :exclude_followers, type: Boolean, default: false
+          optional :exclude_wishlist,  type: Boolean, default: false
+          optional :exclude_wish_met,  type: Boolean, default: false
+          optional :exclude_friends,   type: Boolean, default: false
+          optional :count,             type: Integer
+        end
+
+        def network_filter(in_user, params, results)
+          matches = []
+          results['hits']['hits'].each do |u|
+            u['_network'] = {}
+            include_doc   = true
+            ['following', 'followers', 'wishlist', 'wish_met', 'friends'].map{ |key|
+              u['_network'][key] = ((in_user['_source'][key] ||= []).include? u['_id']) ? true : false
+              include_doc = false if (params["exclude_#{key}".to_sym] && u['_network'][key] == true)
+            }
+
+            matches << u if include_doc
+          end
+
+          if (params[:count] && params[:count] > 0)
+            matches = matches.slice(0, params[:count])
+            result['hits']['total'] = matches.length
+            result['hits']['hits']  = matches
+          else
+            results['hits']['total'] = matches.length
+            results['hits']['hits']  = matches
+          end
+          return results
+        end
       end
 
       namespace :users do
@@ -35,33 +69,26 @@ module Comotion
         post do
           person = {}
           model  = Comotion::Data::Person::Model.new
-          # TODO: Use Comotion::Data::Model as a validator source and validate
-          #       and check the data in the params before adding to the person hash
           model.members.each do |field|
-            person[field] = params[:person][field]
+            person[field] = params[:person][field] unless params[:person][field].nil?
           end
+
 
           pp person
 
-          elastic  = Comotion::Data::Elasticsearch.new(false).client
-          index    = 'comotion'
-          type     = 'person'
+          es = Comotion::Data::Elasticsearch.new(@@type)
+          if es.exists(person[:id])
+            response = es.update(person[:id], person)
+          else
+            response = es.index(person[:id], person)
+          end
 
-          response = elastic.index index: index, type: type, id: person[:id], body: person
+          return response
         end
 
-        # GET /users
-        # I cannot conceive of a use-case where we'd need to get all users at once.
-        # User lists in our case are heavily context-dependent.
         desc 'Get all users - probably inadvisable'
         get do
-          elastic  = Comotion::Data::Elasticsearch.new(false).client
-          index    = 'comotion'
-          type     = 'person'
-
-          query = { query: { match_all: {} } }
-
-          response = elastic.search index: index, type: type, body: query
+          response = Comotion::Data::Elasticsearch.new(@@type).search({query: {match_all: {}}})
         end
 
         route_param :user_id do
@@ -73,50 +100,21 @@ module Comotion
           # GET /users/:user_id
           desc 'Retrive a user object by id'
           get do
-            elastic = Comotion::Data::Elasticsearch.new(false).client
-            index   = 'comotion'
-            type    = 'person'
-
-            elastic.get index: index, type: type, id: params[:user_id]
+            response = Comotion::Data::Elasticsearch.new(@@type).document(params[:user_id])
           end
 
-          # PUT /users/:user_id
-          desc 'Modify an existing user object'
-          put do
-          end
-
-          # PUT /users/:user_id/status
           desc 'Convenience endpoint for status update'
           params do
             requires :status, type: String, allow_blank: true
           end
           put :status do
-            elastic = Comotion::Data::Elasticsearch.new(false).client
-            index   = 'comotion'
-            type    = 'person'
-
-            response = elastic.update index: index, type: type, id: params[:user_id], body: {doc: { status: params[:status] }}
+            patch = { status: params[:status] }
+            response = Comotion::Data::Elasticsearch.new(@@type).update(params[:user_id], patch)
           end
 
-          # DELETE /users/:user_id
-          # This would be best if implemented as a two-step system. For now, for simplicity,
-          # it's being represented as a fire-and-forget api call. Handle with extreme care.
-          # Step 1: POST   /users/:user_id/delete_token
-          # Step 2: DELETE /users/:user_id?delete_token=:delete_token
           desc 'Delete an existing user object'
           delete do
-            elastic = Comotion::Data::Elasticsearch.new(false).client
-            index   = 'comotion'
-            type    = 'person'
-            # expected response:
-            # {
-            #   "found": true,
-            #   "_index": "comotion",
-            #   "_type": "person",
-            #   "_id": "79b16ba8-c624-4605-961c-07c5f4a99466",
-            #   "_version": 2
-            # }
-            response = elastic.delete index: index, type: type, id: params[:user_id]
+            response = Comotion::Data::Elasticsearch.new(@@type).delete(params[:user_id])
           end
 
           namespace :wishlist do
@@ -135,16 +133,40 @@ module Comotion
               # POST   /users/:user_id/wishlist/:other_user_id
               desc 'add a user to the wishlist'
               post do
+                es   = Comotion::Data::Elasticsearch.new(@@type)
+                user = es.read(params[:user_id])
+
+                (user['_source']['wishlist'] ||= []) << params[:other_user_id]
+                user['_source']['wishlist'].uniq
+                es.update(user['_id'], {wishlist: user['_source']['wishlist']})
+
+                user
               end
 
               # PUT    /users/:user_id/wishlist/:other_user_id { timestamp, location }
               desc 'indicate that a user has been met.'
               put do
+                es   = Comotion::Data::Elasticsearch.new(@@type)
+                user = es.read(params[:user_id])
+
+                (user['_source']['wish_met'] ||= []) << params[:other_user_id]
+                user['_source']['wish_met'].uniq
+                es.update(user['_id'], {wish_met: user['_source']['wish_met']})
+
+                user
               end
 
               # DELETE /users/:user_id/wishlist/:other_user_id
               desc 'remove a user from the wishlist'
               delete do
+                es   = Comotion::Data::Elasticsearch.new(@@type)
+                user = es.read(params[:user_id])
+
+                (user['_source']['wishlist'].delete ||= []) << params[:other_user_id]
+                user['_source']['wishlist'].uniq
+                es.update(user['_id'], {wishlist: user['_source']['wishlist']})
+
+                user
               end
 
             end # route_param :other_user_id
@@ -160,26 +182,18 @@ module Comotion
             # GET /users/:user_id/connections/recommended
             desc 'request a list of recommended connections'
             params do
-              optional :role,  type: String
-              optional :debug, type: Boolean
+              use :network
             end
             get :recommended do
-              elastic = Comotion::Data::Elasticsearch.new(false).client
-              index   = 'comotion'
-              type    = 'person'
+              es = Comotion::Data::Elasticsearch.new(@@type)
 
-              this_user = elastic.get index: index, type: type, id: params[:user_id]
-              interests = this_user['_source']['tags'].map { |t| t.downcase }
+              this_user = es.read(params[:user_id])
+              interests = (this_user['_source']['tags'] ||= []).map{ |t| t.downcase }
+
               esq       = Esquire::RecommendedUsers.new(interests)
-
-              results = Comotion::Data::Person::Formatter.from_elasticsearch(esq.run)
-
-              if (params[:debug])
-                return {query: esq.build, results: results}
-              else
-                return results
-              end
-
+              esq.size  = params[:count] unless params[:count].nil?
+              result    = network_filter(this_user, params, es.search(esq.build))
+              return result['hits']
             end
 
             route_param :other_user_id do
@@ -190,28 +204,70 @@ module Comotion
 
               desc 'Get your match-level with this user'
               get do
-                elastic = Comotion::Data::Elasticsearch.new(false).client
-                index   = 'comotion'
-                type    = 'person'
+                es = Comotion::Data::Elasticsearch.new(@@type)
 
-                this_user = elastic.get index: index, type: type, id: params[:user_id]
-                interests = this_user['_source']['tags'].map{ |t| t.downcase }
+                this_user = es.get(params[:user_id])
+                interests = (this_user['_source']['tags'] ||= []).map { |t| t.downcase }
                 esq       = Esquire::UserMatch.new(params[:other_user_id], interests)
 
-                result = esq.run
+                result = es.search(esq.build)
                 match  = result['hits']['hits'][0]
 
                 {score: match['_score']}
               end
 
+              params do
+                use :network
+              end
+              get :network do
+                es = Comotion::Data::Elasticsearch.new(@@type)
+
+                in_user  = es.read(params[:user_id])
+                out_user = es.read(params[:other_user_id])
+
+                interests = (in_user['_source']['tags'] ||= []).map { |t| t.downcase }
+                network   = (out_user['_source']['following'] ||= []).uniq
+                esq       = Esquire::NetworkMatch.new(network, interests)
+
+                pp esq.build
+
+
+                result    = network_filter(in_user, params, es.search(esq.build))
+                return result['hits']
+              end
+
               # POST /users/:user_id/connections/:other_user_id
               desc 'follow a user'
               post do
+                es = Comotion::Data::Elasticsearch.new(@@type)
+
+                in_user  = es.read(params[:user_id])
+                out_user = es.read(params[:other_user_id])
+
+                (in_user['_source']['following'] ||= []) << out_user['_id']
+                (out_user['_source']['followers'] ||= []) << in_user['_id']
+
+                es.update(in_user['_id'], {following: in_user['_source']['following'].uniq})
+                es.update(out_user['_id'], {followers: out_user['_source']['followers'].uniq})
+
+                {followed: true}
               end
 
               # DELETE /users/:user_id/connections/:other_user_id
               desc 'unfollow a user'
               delete do
+                es = Comotion::Data::Elasticsearch.new(@@type)
+
+                in_user  = es.read(params[:user_id])
+                out_user = es.read(params[:other_user_id])
+
+                (in_user['_source']['following'] ||= []).delete(out_user['_id'])
+                (out_user['_source']['followers'] ||= []).delete(in_user['_id'])
+
+                es.update(in_user['_id'], {following: in_user['_source']['following'].uniq})
+                es.update(out_user['_id'], {followers: out_user['_source']['followers'].uniq})
+
+                {followed: false}
               end
 
             end # route_param :other_user_id

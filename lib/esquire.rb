@@ -1,23 +1,7 @@
-module Comotion
-  module Data
-    class Elasticsearch
-      @@es_connection = nil
-
-      def initialize(log = false)
-        @@es_connection ||= ::Elasticsearch::Client.new log: log
-      end
-
-      def client
-        @@es_connection
-      end
-    end
-  end
-end
-
 module Esquire
   class Core
     attr_accessor :script_file, :terms, :src_weight, :tgt_weight, :max_boost, :boost_mode
-    attr_accessor :index, :type
+    attr_accessor :index, :type, :size, :order
 
 
     def initialize
@@ -25,6 +9,8 @@ module Esquire
 
       @index       = 'comotion'
       @type        = 'person'
+      @order       = 'desc'
+      @size        = 100
 
       @script_type = :cvg_score
       @terms       = []
@@ -32,10 +18,6 @@ module Esquire
       @tgt_weight  = 0
       @max_boost   = 0.99
       @boost_mode  = 'replace'
-    end
-
-    def client
-      @@client ||= Elasticsearch::Client.new log: false
     end
 
     def cvg_score
@@ -56,8 +38,12 @@ module Esquire
       }
     end
 
-    def run
-      client.search index: @index, type: @type, body: build
+    def score_sort
+      { _score: { order: @order } }
+    end
+
+    def to_json
+      build.to_json
     end
   end
 
@@ -69,7 +55,10 @@ module Esquire
     end
 
     def build
-      { query: cvg_score }
+      {
+        query: cvg_score,
+        sort: score_sort
+      }
     end
   end
 
@@ -93,14 +82,19 @@ module Esquire
     end
 
     def build
-      {
+      query = {
         query: {
           filtered: {
             filter: filter,
             query:  cvg_score
           }
-        }
+        },
+        sort: score_sort
       }
+
+      query[:size] = @size unless @size.nil?
+
+      query
     end
   end
 
@@ -117,13 +111,18 @@ module Esquire
 
     def build
       @terms = @terms.map { |t| t.downcase }
-      {
+      query  = {
         query: {
           filtered: {
             query: cvg_score
           }
-        }
+        },
+        sort: score_sort
       }
+
+      query[:size] = @size unless @size.nil?
+
+      query
     end
   end
 end
