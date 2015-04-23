@@ -73,9 +73,6 @@ module Comotion
             person[field] = params[:person][field] unless params[:person][field].nil?
           end
 
-
-          pp person
-
           es = Comotion::Data::Elasticsearch.new(@@type)
           if es.exists(person[:id])
             response = es.update(person[:id], person)
@@ -228,9 +225,6 @@ module Comotion
                 interests = (in_user['_source']['tags'] ||= []).map { |t| t.downcase }
                 network   = (out_user['_source']['following'] ||= []).uniq
                 esq       = Esquire::NetworkMatch.new(network, interests)
-
-                pp esq.build
-
 
                 result    = network_filter(in_user, params, es.search(esq.build))
                 return result['hits']
