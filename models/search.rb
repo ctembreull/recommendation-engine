@@ -3,9 +3,9 @@ module Comotion
     class Elasticsearch
       attr_accessor :log
 
-      def initialize(index = 'comotion', type)
+      def initialize(type = nil)
         @log   = false
-        @index = index
+        @index = 'comotion'
         @type  = type
         @debug = false
       end

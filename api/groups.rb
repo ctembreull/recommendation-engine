@@ -1,62 +1,49 @@
 module Comotion
   module Groups
     class API < Grape::API
+      @@type = 'group'
+
+      helpers do
+        params :group do
+          requires :group, type: Hash do
+            requires :id,          type: String, allow_blank: false
+            optional :name,        type: String
+            optional :description, type: String
+            optional :join_policy, type: Integer
+            optional :created_at,  type: DateTime
+            optional :website,     type: String
+            optional :avatar,      type: String
+          end
+        end
+      end
 
       namespace :groups do
 
+        params do
+          use :group
+        end
         post do
+          group = {}
+          model = Comotion::Data::Group::Model.new
+          model.members.each do |field|
+            group[field] = params[:group][field] unless params[:group][field].nil?
+          end
+
+          es = Comotion::Data::Elasticsearch.new('group')
+          if es.exists(group[:id])
+            response = es.update(group[:id], group)
+          else
+            response = es.index(group[:id], group)
+          end
+
+          return response
         end
 
         get do
         end
 
         route_param :group_id do
-
-          params do
-            requires :group_id, type: String
-          end
-
-          get do
-          end
-
-          put do
-          end
-
-          delete do
-          end
-
-          namespace :invitations do
-
-            post do
-              # TODO: invite user(s) to this group
-            end
-
-            get do
-            end
-
-            route_param :invitation_id do
-
-              params do
-                requires :invitation_id, type: String
-              end
-
-              get do
-                # TODO: details about invitation for current-user
-              end
-
-              post do
-                # TODO: accept invitation for current-user
-              end
-
-              delete do
-                # TODO: decline invitation for current-user
-              end
-
-            end # route_pram :invitation_id
-
-          end # namespace :invitations
-
-        end # route_param :group_id
+        end
       end # namespace :groups
 
     end # class API
