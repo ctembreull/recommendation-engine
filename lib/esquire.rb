@@ -42,9 +42,6 @@ module Esquire
       { _score: { order: @order } }
     end
 
-    def to_json
-      build.to_json
-    end
   end
 
   class UserMatch < Core
