@@ -11,6 +11,7 @@ module Comotion
     mount ::Comotion::Users::API
     mount ::Comotion::Groups::API
     mount ::Comotion::Events::API
+    mount ::Comotion::Search::API
 
   end
 end

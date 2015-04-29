@@ -2,31 +2,30 @@ module Comotion
   module Data
     module Person
 
-      class Model < Struct.new(:id, :username, :fullname, :email, :tags, :role, :type, :avatar, :seeking)
+      class Model < Struct.new(:id, :username, :fullname, :email, :tags, :role, :type, :avatar, :seeking, :uwnetid)
         # :followers, :following, :friends, :wishlist, :wish_met)
       end # class Model
 
       class Mapping
         def self.map
           {
-            mappings: {
-              person: {
-                properties: {
-                  id:        { type: 'string', store: true },
-                  fullname:  { type: 'string', store: true },
-                  username:  { type: 'string', store: true },
-                  email:     { type: 'string', store: true },
-                  tags:      { type: 'string', store: true, analyzed: true },
-                  type:      { type: 'string', store: true },
-                  avatar:    { type: 'string', store: true },
-                  role:      { type: 'string', store: true },
-                  seeking:   { type: 'string', store: true },
-                  followers: { type: 'string', store: true },
-                  following: { type: 'string', store: true },
-                  friends:   { type: 'string', store: true },
-                  wishlist:  { type: 'string', store: true },
-                  wish_met:  { type: 'string', store: true }
-                }
+            person: {
+              properties: {
+                id:        { type: 'string', store: true },
+                fullname:  { type: 'string', store: true },
+                username:  { type: 'string', store: true },
+                email:     { type: 'string', store: true },
+                uwnetid:   { type: 'string', store: true },
+                tags:      { type: 'string', store: true, analyzed: true },
+                type:      { type: 'string', store: true },
+                avatar:    { type: 'string', store: true },
+                role:      { type: 'string', store: true },
+                seeking:   { type: 'string', store: true },
+                followers: { type: 'string', store: true },
+                following: { type: 'string', store: true },
+                friends:   { type: 'string', store: true },
+                wishlist:  { type: 'string', store: true },
+                wish_met:  { type: 'string', store: true }
               }
             }
           }

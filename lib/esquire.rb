@@ -42,9 +42,6 @@ module Esquire
       { _score: { order: @order } }
     end
 
-    def to_json
-      build.to_json
-    end
   end
 
   class UserMatch < Core
@@ -122,6 +119,102 @@ module Esquire
 
       query[:size] = @size unless @size.nil?
 
+      query
+    end
+  end
+
+  class CustomSearch < Core
+    attr_accessor :best_fields
+    def initialize(query = '')
+      super()
+      @query       = query
+      @best_fields = []
+    end
+
+    def build
+      {
+        query: {
+          filtered: {
+            filter: {},
+            query: {
+              multi_match: {
+                query:  @query,
+                type:   'best_fields',
+                fields: @best_fields,
+                tie_breaker: 0.3
+              }
+            }
+          }
+        }
+      }
+    end
+  end
+
+  class GeoSearch < CustomSearch
+    attr_accessor :best_fields, :distance, :unit
+
+    def initialize(query = '')
+      super(query)
+      @lat      = 0
+      @lon      = 0
+      @distance = 5.to_s
+      @unit     = 'mi'
+      @best_fields = []
+    end
+
+    def center(lat,lon)
+      @lat = lat
+      @lon = lon
+      geoshape
+    end
+
+    def radius(distance, unit = 'mi')
+      @distance = distance.to_s
+      @unit     = unit
+      geoshape
+    end
+
+    def geoshape
+      {
+        lat: @lat,
+        lon: @lon,
+        radius: @distance + @unit
+      }
+    end
+
+    def build
+      query = super()
+      query[:query][:filtered][:filter] = {
+        geo_distance: {
+          distance: @distance + @unit,
+          'pin.location' => {
+            lat: @lat,
+            lon: @lon
+          }
+        }
+      }
+      query
+    end
+  end
+
+  class DateSearch < CustomSearch
+    def initialize
+      super()
+    end
+
+    def slice(start_time, end_time)
+    end
+
+    def build
+      query = super()
+      query[:query][:filtered][:filter] = {
+        range: {
+          start_date: {
+            gte: '',
+            lte: '',
+          }
+        }
+      }
       query
     end
   end
