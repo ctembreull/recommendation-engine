@@ -2,9 +2,56 @@ module Comotion
   module Events
     class API < Grape::API
 
+      @@type = 'event'
+
+      helpers do
+        params :event do
+          requires :event, type: Hash do
+            requires :id,          type: Integer
+            optional :uid,         type: String
+            optional :categories,  type: Array
+            optional :title,       type: String
+            optional :description, type: String
+            optional :avatar,      type: String
+            optional :start_time,  type: String
+            optional :end_time,    type: String
+            optional :location,    type: String
+            optional :tags,        type: Array
+
+            optional :pin, type: Hash do
+              optional :coords, type: String
+              optional :color,  type: String
+            end
+
+          end
+        end
+      end
+
       namespace :events do
 
+        params do
+          use :event
+        end
         post do
+          event = {}
+          model = Comotion::Data::Event::Model.new
+          model.members.each do |field|
+            if (field == :start_time or field == :end_time)
+              unless params[:event][field].nil?
+                dt = params[:event][field]
+                dt += "-0800"
+                date_obj = DateTime.parse(dt)
+                event[field] = date_obj.utc.strftime('%Y-%m-%dT%H:%M:%S%z')
+              end
+            else
+              event[field] = params[:event][field] unless params[:event][field].nil?
+            end
+          end
+
+          es = Comotion::Data::Elasticsearch.new(@@type)
+          response = es.create_or_update(event)
+
+          return response
         end
 
         get do

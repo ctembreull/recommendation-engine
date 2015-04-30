@@ -124,30 +124,45 @@ module Esquire
   end
 
   class CustomSearch < Core
-    attr_accessor :best_fields
+    attr_accessor :best_fields, :pre_tags, :post_tags
     def initialize(query = '')
       super()
       @query       = query
       @best_fields = []
+
+      @pre_tags  = '<span class="highlight">'
+      @post_tags = '</span>'
     end
 
     def build
-      {
+      q = {
         query: {
           filtered: {
             filter: {},
             query: {
-              multi_match: {
-                query:  @query,
-                type:   'best_fields',
+              query_string: {
+                query:  @query + '*',
                 fields: @best_fields,
-                tie_breaker: 0.3
               }
             }
           }
         }
       }
     end
+
+    def highlight
+      atom = {
+        pre_tags:  @pre_tags,
+        post_tags: @post_tags,
+        fields:    {}
+      }
+      @best_fields.each {|t| atom[:fields][t.to_sym] = {}}
+
+      atom
+    end
+
+
+
   end
 
   class GeoSearch < CustomSearch

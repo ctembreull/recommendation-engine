@@ -43,6 +43,14 @@ module Comotion
         client.send(:delete, {index: @index, type: @type, id: id})
       end
       alias_method :destroy, :delete
+
+      def create_or_update(doc)
+        if exists(doc[:id])
+          update(doc[:id], doc)
+        else
+          create(doc[:id], doc)
+        end
+      end
     end
   end
 end

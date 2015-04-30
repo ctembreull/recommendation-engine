@@ -2,7 +2,7 @@ module Comotion
   module Data
     module Person
 
-      class Model < Struct.new(:id, :username, :fullname, :email, :tags, :role, :type, :avatar, :seeking, :uwnetid)
+      class Model < Struct.new(:id, :username, :fullname, :email, :tags, :role, :type, :avatar, :seeking, :uwnetid, :url)
         # :followers, :following, :friends, :wishlist, :wish_met)
       end # class Model
 
@@ -16,9 +16,10 @@ module Comotion
                 username:  { type: 'string', store: true },
                 email:     { type: 'string', store: true },
                 uwnetid:   { type: 'string', store: true },
-                tags:      { type: 'string', store: true, analyzed: true },
+                tags:      { type: 'string', store: true },
                 type:      { type: 'string', store: true },
                 avatar:    { type: 'string', store: true },
+                url:       { type: 'string', store: true },
                 role:      { type: 'string', store: true },
                 seeking:   { type: 'string', store: true },
                 followers: { type: 'string', store: true },

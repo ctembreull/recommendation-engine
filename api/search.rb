@@ -12,7 +12,7 @@ module Comotion
         get do
           es = Comotion::Data::Elasticsearch.new
           eq = ::Esquire::CustomSearch.new(params[:q])
-          eq.best_fields += ['tags']
+          eq.best_fields += ['tags', 'fullname', 'name', 'title', 'description', 'email', 'uwnetid']
           results = es.query(eq.build)
 
           if (params[:bucketed] == true)

@@ -13,6 +13,7 @@ module Comotion
             optional :created_at,  type: DateTime
             optional :website,     type: String
             optional :avatar,      type: String
+            optional :url,         type: String
           end
         end
       end
