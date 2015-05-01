@@ -27,7 +27,7 @@ module Comotion
                 },
                 invited:   { type: 'string', store: 'true' },
                 attending: { type: 'string', store: 'true' },
-                tags:      { type: 'string', store: 'true' }
+                tags:      { type: 'string', store: 'true', index: 'analyzed' }
               }
             }
           }

@@ -15,7 +15,7 @@ module Comotion
                 description: { type: 'string',  store: true },
                 join_policy: { type: 'integer', store: true },
                 created_at:  { type: 'date',    store: true }, # TODO: add format
-                tags:        { type: 'string',  store: true },
+                tags:        { type: 'string',  store: true, index: 'analyzed' },
                 website:     { type: 'string',  store: true },
                 avatar:      { type: 'string',  store: true },
                 url:         { type: 'string',  store: true },

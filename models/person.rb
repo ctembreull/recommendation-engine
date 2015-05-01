@@ -16,7 +16,7 @@ module Comotion
                 username:  { type: 'string', store: true },
                 email:     { type: 'string', store: true },
                 uwnetid:   { type: 'string', store: true },
-                tags:      { type: 'string', store: true },
+                tags:      { type: 'string', store: true, index: 'analyzed' },
                 type:      { type: 'string', store: true },
                 avatar:    { type: 'string', store: true },
                 url:       { type: 'string', store: true },
