@@ -2,13 +2,13 @@ module MyApp
   class Interests
 
     def self.list_all
-      ['Management', 'Business', 'Sales ', 'Marketing', 'Communication',
+      ['Management', 'Business', 'Sales', 'Marketing', 'Communication',
        'Microsoft Office', 'Customer Service', 'Training', 'Microsoft Excel',
        'Project Management', 'Designs', 'Analysis', 'Research', 'Websites',
        'Budgets', 'Organization', 'Leadership', 'Time Management',
        'Project Planning', 'Computer Program', 'Strategic Planning',
        'Business Services', 'Applications', 'Reports', 'Microsoft Word',
-       'Program Management', 'Powerpoint', 'Negotation', 'Software',
+       'Program Management', 'Powerpoint', 'Negotiation', 'Software',
        'Networking', 'Offices', 'English', 'Data', 'Education', 'Events',
        'International', 'Testing', 'Writing', 'Vendors', 'Advertising',
        'Databases', 'Technology', 'Finance', 'Retail', 'accounting',
