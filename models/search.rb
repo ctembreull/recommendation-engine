@@ -1,7 +1,7 @@
 module Comotion
   module Data
     class Elasticsearch
-      attr_accessor :log
+      attr_accessor :log, :type
 
       def initialize(type = nil)
         @log   = false
@@ -12,6 +12,11 @@ module Comotion
 
       def client
         @@api_client ||= ::Elasticsearch::Client.new log: @log
+      end
+
+      def type(type)
+        @type = type
+        return self;
       end
 
       def exists(id)

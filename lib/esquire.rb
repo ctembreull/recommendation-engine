@@ -101,13 +101,13 @@ module Esquire
       @terms = terms
       @query = {
         terms:  {
-          tags: @terms.map { |t| t.downcase }
+          tags: @terms.map { |t| t.downcase unless t.nil? }
         }
       }
     end
 
     def build
-      @terms = @terms.map { |t| t.downcase }
+      @terms = @terms.map { |t| t.downcase unless t.nil? }
       query  = {
         query: {
           filtered: {
@@ -233,4 +233,87 @@ module Esquire
       query
     end
   end
+
+  class EventSearch
+    def initialize(max = 10)
+      @size = max
+    end
+
+    def set_geometry(lat = 0, lon = 0, radius = 5, units = 'mi')
+      @lat    = lat
+      @lon    = lon
+      @radius = radius.to_s + units
+      @geometry_units = units
+    end
+
+    def set_future(range = 7, units = 'd')
+      @future = range.to_s + units
+    end
+
+    def geo_distance_filter
+      {
+        geo_distance: {
+          distance: @radius,
+          'pin.coords' => {
+            lat: @lat,
+            lon: @lon
+          }
+        }
+      }
+    end
+
+    def date_range_filter
+      {
+        range: {
+          start_time: {
+            gte: 'now',
+            lte: 'now+' + @future
+          }
+        }
+      }
+    end
+
+    def geo_distance_sort
+      {
+        _geo_distance: {
+          'pin.coords' => {
+            lat: @lat,
+            lon: @lon
+          },
+          order: 'asc',
+          unit:  @geometry_units,
+          distance_type: 'plane'
+        }
+      }
+    end
+
+    def start_time_sort
+      {
+        start_time: {
+          order: 'asc'
+        }
+      }
+    end
+
+    def build
+      {
+        size: @size,
+        query: {
+          filtered: {
+            query: {match_all: {}},
+            filter: {
+              and: [geo_distance_filter, date_range_filter]
+            }
+          }
+        },
+        sort: [geo_distance_sort, start_time_sort]
+      }
+    end
+
+
+
+  end
+
+
+
 end

@@ -40,9 +40,6 @@ module Comotion
           return response
         end
 
-        get do
-        end
-
         route_param :group_id do
         end
       end # namespace :groups

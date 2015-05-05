@@ -51,6 +51,20 @@ module Comotion
         end
 
         namespace :events do
+
+          params do
+            requires :lat, type: Float
+            requires :lon, type: Float
+            requires :rad, type: Float
+          end
+          get :radius do
+            es = Comotion::Data::Elasticsearch.new('event')
+            eq = ::Esquire::EventSearch.new()
+            eq.set_geometry(params[:lat], params[:lon], params[:rad])
+            eq.set_future() # defaults to 7 days
+            results = es.query(eq.build)
+          end
+
           get do
             es = Comotion::Data::Elasticsearch.new('event')
             eq = ::Esquire::CustomSearch.new(params[:q])

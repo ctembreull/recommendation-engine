@@ -8,9 +8,11 @@ HOST  = 'localhost'
 PORT  = 9200
 INDEX = 'comotion'
 TYPE = {
-  'person' => Comotion::Data::Person,
-  'event'  => Comotion::Data::Event,
-  'group'  => Comotion::Data::Group
+  'person'  => Comotion::Data::Person,
+  'event'   => Comotion::Data::Event,
+  'group'   => Comotion::Data::Group,
+  'team'    => Comotion::Data::Team,
+  'content' => Comotion::Data::Content,
 }
 
 es = Elasticsearch::Client.new log:false

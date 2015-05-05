@@ -33,31 +33,7 @@ module Comotion
           optional :exclude_friends,   type: Boolean, default: false
           optional :count,             type: Integer
         end
-
-        def network_filter(in_user, params, results)
-          matches = []
-          results['hits']['hits'].each do |u|
-            u['_network'] = {}
-            include_doc   = true
-            ['following', 'followers', 'wishlist', 'wish_met', 'friends'].map{ |key|
-              u['_network'][key] = ((in_user['_source'][key] ||= []).include? u['_id']) ? true : false
-              include_doc = false if (params["exclude_#{key}".to_sym] && u['_network'][key] == true)
-            }
-
-            matches << u if include_doc
-          end
-
-          if (params[:count] && params[:count] > 0)
-            matches = matches.slice(0, params[:count])
-            result['hits']['total'] = matches.length
-            result['hits']['hits']  = matches
-          else
-            results['hits']['total'] = matches.length
-            results['hits']['hits']  = matches
-          end
-          return results
-        end
-      end
+      end # helpers
 
       namespace :users do
 
@@ -81,11 +57,6 @@ module Comotion
           end
 
           return response
-        end
-
-        desc 'Get all users - probably inadvisable'
-        get do
-          response = Comotion::Data::Elasticsearch.new(@@type).search({query: {match_all: {}}})
         end
 
         route_param :user_id do
@@ -185,7 +156,7 @@ module Comotion
               es = Comotion::Data::Elasticsearch.new(@@type)
 
               this_user = es.read(params[:user_id])
-              interests = (this_user['_source']['tags'] ||= []).map{ |t| t.downcase }
+              interests = (this_user['_source']['tags'] ||= []).map{ |t| t.downcase unless t.nil? }
 
               esq       = Esquire::RecommendedUsers.new(interests)
               esq.size  = params[:count] unless params[:count].nil?
@@ -204,7 +175,7 @@ module Comotion
                 es = Comotion::Data::Elasticsearch.new(@@type)
 
                 this_user = es.get(params[:user_id])
-                interests = (this_user['_source']['tags'] ||= []).map { |t| t.downcase }
+                interests = (this_user['_source']['tags'] ||= []).map { |t| t.downcase unless t.nil? }
                 esq       = Esquire::UserMatch.new(params[:other_user_id], interests)
 
                 result = es.search(esq.build)
@@ -270,13 +241,30 @@ module Comotion
           namespace :events do
 
             # GET /user/:user_id/events/recommended
-            desc 'Get a list of recommended events for this user'
+            desc 'Get a list of recommended events for this user. This should bias towards nearby events.'
             get :recommended do
             end
 
             # GET /user/:user_id/events/attending
             desc 'Get a list of events this user is or will be attending'
             get :attending do
+            end
+
+            desc 'Get the *next* future event this user will be attending'
+            get :next do
+              es   = Comotion::Data::Elasticsearch
+              query = {
+                size: 1,
+                query: {term: {attending: params[:user_id]}},
+                sort:  {start_time: {order: 'asc'}}
+              }
+
+              result = es.search(query)
+              if (result['hits']['hits'].empty?)
+                return { upcoming: nil }
+              else
+                return { upcoming: result['hits']['hits'][0] }
+              end
             end
 
             # GET /user/:user_id/events/invited

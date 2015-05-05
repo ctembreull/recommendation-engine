@@ -2,7 +2,7 @@ module Comotion
   module Data
     module Event
 
-      class Model < Struct.new(:id, :uid, :categories, :title, :description, :avatar, :start_time, :end_time, :location, :geo, :tags, :url)
+      class Model < Struct.new(:id, :uid, :categories, :title, :description, :avatar, :start_time, :end_time, :location, :pin, :tags, :url)
       end
 
       class Mapping
@@ -22,6 +22,7 @@ module Comotion
                 pin: {
                   properties: {
                     coords:  { type: 'geo_point', store: 'true' },
+                    raw:     { type: 'String',    store: 'true' },
                     color:   { type: 'string',    store: 'true' }
                   }
                 },
