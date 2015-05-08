@@ -252,14 +252,14 @@ module Comotion
 
             desc 'Get the *next* future event this user will be attending'
             get :next do
-              es   = Comotion::Data::Elasticsearch
+              es   = Comotion::Data::Elasticsearch.new
               query = {
                 size: 1,
-                query: {term: {attending: params[:user_id]}},
-                sort:  {start_time: {order: 'asc'}}
+                query: {match: {attending: params[:user_id]}},
+                sort:  [{start_time: {order: 'asc'}}]
               }
 
-              result = es.search(query)
+              result = es.type('event').search(query)
               if (result['hits']['hits'].empty?)
                 return { upcoming: nil }
               else
